@@ -820,6 +820,9 @@ class RDD(object):
         as its result value to avoid object allocation; however, it should not
         modify C{t2}.
 
+        Note that the provided lambda function should take the opposite order,
+        which means C{t1} needs to be elements and C{t2} be the "zero value."
+
         >>> from operator import add
         >>> sc.parallelize([1, 2, 3, 4, 5]).fold(0, add)
         15
@@ -827,7 +830,7 @@ class RDD(object):
         def func(iterator):
             acc = zeroValue
             for obj in iterator:
-                acc = op(acc, obj)
+                acc = op(obj, acc)
             yield acc
         vals = self.mapPartitions(func).collect()
         return reduce(op, vals, zeroValue)
