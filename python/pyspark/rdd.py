@@ -827,7 +827,7 @@ class RDD(object):
         def func(iterator):
             acc = zeroValue
             for obj in iterator:
-                acc = op(obj, acc)
+                acc = op(acc, obj)
             yield acc
         vals = self.mapPartitions(func).collect()
         return reduce(op, vals, zeroValue)
