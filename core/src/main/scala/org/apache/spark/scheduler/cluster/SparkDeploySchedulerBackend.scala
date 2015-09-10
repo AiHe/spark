@@ -45,10 +45,12 @@ private[spark] class SparkDeploySchedulerBackend(
   private val maxCores = conf.getOption("spark.cores.max").map(_.toInt)
   private val totalExpectedCores = maxCores.getOrElse(0)
 
+  // <Key>, Called when starting taskScheduler
   override def start() {
     super.start()
 
     // The endpoint for executors to talk to us
+    // <Key>, Set the driver url for feature reference
     val driverUrl = rpcEnv.uriOf(SparkEnv.driverActorSystemName,
       RpcAddress(sc.conf.get("spark.driver.host"), sc.conf.get("spark.driver.port").toInt),
       CoarseGrainedSchedulerBackend.ENDPOINT_NAME)

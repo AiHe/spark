@@ -115,6 +115,7 @@ private[spark] class Executor(
 
   startDriverHeartbeater()
 
+  // <Key>, Run a task at an executor
   def launchTask(
       context: ExecutorBackend,
       taskId: Long,
@@ -124,6 +125,7 @@ private[spark] class Executor(
     val tr = new TaskRunner(context, taskId = taskId, attemptNumber = attemptNumber, taskName,
       serializedTask)
     runningTasks.put(taskId, tr)
+    // <Key>, Actually run a task at the thread pool of an executor
     threadPool.execute(tr)
   }
 

@@ -70,6 +70,7 @@ private[spark] abstract class EventLoop[E](name: String) extends Logging {
     }
     // Call onStart before starting the event thread to make sure it happens before onReceive
     onStart()
+    // <Key>, Start pulling from jobs waiting loop when something available
     eventThread.start()
   }
 

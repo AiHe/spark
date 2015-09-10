@@ -123,6 +123,7 @@ private[spark] class TaskSchedulerImpl(
     this.dagScheduler = dagScheduler
   }
 
+  // <Key>, Link taskScheduler and schedulerBackend
   def initialize(backend: SchedulerBackend) {
     this.backend = backend
     // temporarily set rootPool name to empty
@@ -140,6 +141,7 @@ private[spark] class TaskSchedulerImpl(
 
   def newTaskId(): Long = nextTaskId.getAndIncrement()
 
+  // <Key>, Called when starting taskScheduler
   override def start() {
     backend.start()
 
@@ -157,6 +159,7 @@ private[spark] class TaskSchedulerImpl(
     waitBackendReady()
   }
 
+  // <Key>, Receive tasks(as taskSet) from dagScheduler and then offer tasks to executors
   override def submitTasks(taskSet: TaskSet) {
     val tasks = taskSet.tasks
     logInfo("Adding task set " + taskSet.id + " with " + tasks.length + " tasks")
@@ -190,6 +193,7 @@ private[spark] class TaskSchedulerImpl(
       }
       hasReceivedTask = true
     }
+    // <Key>, notify schedulerBackend to receive tasks offer
     backend.reviveOffers()
   }
 
@@ -276,6 +280,7 @@ private[spark] class TaskSchedulerImpl(
    * sets for tasks in order of priority. We fill each node with tasks in a round-robin manner so
    * that tasks are balanced across the cluster.
    */
+  // <Key>, Pair tasks and executors
   def resourceOffers(offers: Seq[WorkerOffer]): Seq[Seq[TaskDescription]] = synchronized {
     // Mark each slave as alive and remember its hostname
     // Also track if new executor is added

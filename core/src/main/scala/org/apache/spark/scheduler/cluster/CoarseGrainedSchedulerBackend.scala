@@ -113,6 +113,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
           }
         }
 
+      // <Key>, Receive tasks offer and prepare executors offer for them
       case ReviveOffers =>
         makeOffers()
 
@@ -175,12 +176,14 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
 
     // Make fake resource offers on all executors
+    // <Key>, Make executors offer for tasks offer
     private def makeOffers() {
       // Filter out executors under killing
       val activeExecutors = executorDataMap.filterKeys(!executorsPendingToRemove.contains(_))
       val workOffers = activeExecutors.map { case (id, executorData) =>
         new WorkerOffer(id, executorData.executorHost, executorData.freeCores)
       }.toSeq
+      // <Key>, Pair tasks and executors and launch tasks
       launchTasks(scheduler.resourceOffers(workOffers))
     }
 
@@ -201,6 +204,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
 
     // Launch tasks returned by a set of resource offers
+    // <Key>, launch tasks given tasks' description(as taskDescription which pairs a task and an executor)
     private def launchTasks(tasks: Seq[Seq[TaskDescription]]) {
       for (task <- tasks.flatten) {
         val serializedTask = ser.serialize(task)
@@ -219,8 +223,10 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
           }
         }
         else {
+          // <Key>, Fetch the corresponding executor for a given task from the executors' management hashMap
           val executorData = executorDataMap(task.executorId)
           executorData.freeCores -= scheduler.CPUS_PER_TASK
+          // <Key>, Send the sered taskDescription to the real executor from the executorBackend
           executorData.executorEndpoint.send(LaunchTask(new SerializableBuffer(serializedTask)))
         }
       }
@@ -254,6 +260,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
   var driverEndpoint: RpcEndpointRef = null
   val taskIdsOnSlave = new HashMap[String, HashSet[String]]
 
+  // <Key>, Called when starting taskScheduler
   override def start() {
     val properties = new ArrayBuffer[(String, String)]
     for ((key, value) <- scheduler.sc.conf.getAll) {
@@ -291,6 +298,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
   }
 
+  // <Key>, Send itself "ReviveOffers"(receive tasks offer) message
   override def reviveOffers() {
     driverEndpoint.send(ReviveOffers)
   }
